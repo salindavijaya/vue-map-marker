@@ -1,6 +1,6 @@
 <script>
 /* eslint-disable no-undef */
-import { computed , ref , onMounted , onUnmounted ,onBeforeUpdate} from 'vue'
+import { computed , ref , onMounted , onBeforeUpdate} from 'vue'
 import { useGeolocation } from './useGeolocation'
 import { Loader } from '@googlemaps/js-api-loader'
 import hubList from '../assets/hubs.json'
@@ -13,14 +13,10 @@ export default {
         const { coords } = useGeolocation()  //user-defined dunction for get geolocation
         const currPos = computed( () => ({lat:coords.value.latitude,lng:coords.value.longitude}))
         const loader = new Loader({ apiKey: API_KEY })
-        const otherPos = ref(null)
         const mapDiv = ref(null)
         let map = ref(null)
-        let selectedM = ref('')
-        let clickListener = null
         let items = ref([])
         let markList = ref([])
-        let defaultMarkList = ref([])
         onMounted(async () => {
             await loader.load()
             //initializing map
@@ -57,11 +53,9 @@ export default {
                                 marker.addListener("click", () => {
                                     map.value.setZoom(12);
                                     map.value.setCenter(marker.getPosition());
-                                    selectedM.value = marker.name
                                     markList.value = []
                                     if(!items.value.find(a=>a.name == marker.name)){
                                         items.value.push({name:marker.name,label:marker.label,icon:marker.icon})
-                                        defaultMarkList.value.push(marker)
                                         marker.icon = null
                                         marker.label = ''
                                     }else{
@@ -123,9 +117,7 @@ export default {
                 }
             }) 
         })
-        onUnmounted(async () => {
-            if (clickListener) clickListener.remove()
-        })
+       
         onBeforeUpdate(async ()=>{
             // sorting Hubs by distance
             markList.value.sort((a,b)=>a.distance - b.distance)
@@ -133,7 +125,7 @@ export default {
         })
 
         return {
-            currPos, otherPos, mapDiv ,markList ,selectedM
+            currPos, mapDiv ,markList
         }
     },
     methods:{
